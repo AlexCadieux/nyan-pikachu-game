@@ -2,7 +2,7 @@
 var audio = new Audio("/images/Nightcore- Let the bodies hit the floor - from YouTube.mp3");
 audio.play();
 var GAME_WIDTH = 1050;
-var GAME_HEIGHT = 750;
+var GAME_HEIGHT = 650;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
@@ -11,19 +11,25 @@ var MAX_ENEMIES = 10;
 var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 54;
 
+var BULLET_WIDTH = 75;
+var BULLET_HEIGHT = 50;
+
+
 // These two constants keep us from using "magic numbers" in our code
 var LEFT_ARROW_CODE = 37;
 var RIGHT_ARROW_CODE = 39;
 var R_KEY_CODE = 82;
+var SPACE_KEY_CODE = 32;
 
 // These two constants allow us to DRY
 var MOVE_LEFT = 'left';
 var MOVE_RIGHT = 'right';
 var RESTART = 'r';
+var SHOOT = ' ';
 
 // Preload game images
 var images = {};
-['enemy.png', 'stars.png', 'player.png'].forEach(imgName => {
+['enemy.png', 'stars.png', 'player.png', 'arrow.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -38,6 +44,23 @@ class Entity {
 }
 
 // This section is where you will be doing most of your coding
+class Bullet extends Entity {
+    
+    constructor(xPos) {
+        super();
+        this.x = xPos
+        this.y = GAME_HEIGHT - BULLET_HEIGHT - 10;
+        this.sprite = images['arrow.png'];
+        
+        this.speed = 1
+        
+    }
+    
+    update(timeDiff) {
+        this.y = this.y - timeDiff * this.speed;
+    }
+}
+
 class Enemy extends Entity {
     
     constructor(xPos) {
@@ -47,7 +70,7 @@ class Enemy extends Entity {
         this.sprite = images['enemy.png'];
 
         // Each enemy should have a different speed
-        this.speed = Math.random() / 2 + 0.25/*+ (Math.floor(this.s))*/;
+        this.speed = Math.random() / 2 + 0.25 /*+ (math.Floor(this.s))*/;
     }
 
     update(timeDiff) {
@@ -85,6 +108,7 @@ class Engine {
     constructor(element) {
         // Setup the player
         this.player = new Player();
+        this.bulletsClip = [];
 
         // Setup enemies, making sure there are always three
         this.setupEnemies();
@@ -127,12 +151,28 @@ class Engine {
 
         this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH);
     }
+    
+    // setupBullet() {
+    //     if (!this.bullets) {
+    //         this.bullets = [];
+    //     }
+
+        // while (this.bu.filter(e => !!e).length < MAX_ENEMIES) {
+        //     this.addEnemy();
+        // }
+    // }
+
+    // This method finds a random spot where there is no enemy, and puts one in there
+    addBullet(playerSpot) {
+        var bulletSpot = playerSpot + (PLAYER_WIDTH-BULLET_WIDTH)/2;
+        this.bulletsClip.push(new Bullet(bulletSpot));
+    }
 
     // This method kicks off the game
     start() {
         this.score = 0;
         this.lastFrame = Date.now();
-
+        audio.play();
         // Listen for keyboard left/right and update the player
         document.addEventListener('keydown', e => {
             if (e.keyCode === LEFT_ARROW_CODE) {
@@ -140,6 +180,11 @@ class Engine {
             }
             else if (e.keyCode === RIGHT_ARROW_CODE) {
                 this.player.move(MOVE_RIGHT);
+            }
+            
+            else if (e.keyCode === SPACE_KEY_CODE) {
+                var temp = this.player.x
+                this.addBullet(temp);
             }
         });
 
@@ -166,11 +211,13 @@ class Engine {
 
         // Call update on all enemies
         this.enemies.forEach(enemy => enemy.update(timeDiff));
+        this.bulletsClip.forEach(bullet => bullet.update(timeDiff));
 
         // Draw everything!
         this.ctx.drawImage(images['stars.png'], 0, 0); // draw the star bg
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.player.render(this.ctx); // draw the player
+        this.bulletsClip.forEach(bullet => bullet.render(this.ctx));
 
         // Check if any enemies should die
         this.enemies.forEach((enemy, enemyIdx) => {
