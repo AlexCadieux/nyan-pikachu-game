@@ -1,10 +1,12 @@
 // This sectin contains some game constants. It is not super interesting
-var GAME_WIDTH = 375;
-var GAME_HEIGHT = 500;
+var audio = new Audio("/images/Nightcore- Let the bodies hit the floor - from YouTube.mp3");
+audio.play();
+var GAME_WIDTH = 1050;
+var GAME_HEIGHT = 750;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
-var MAX_ENEMIES = 3;
+var MAX_ENEMIES = 10;
 
 var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 54;
@@ -12,10 +14,12 @@ var PLAYER_HEIGHT = 54;
 // These two constants keep us from using "magic numbers" in our code
 var LEFT_ARROW_CODE = 37;
 var RIGHT_ARROW_CODE = 39;
+var R_KEY_CODE = 82;
 
 // These two constants allow us to DRY
 var MOVE_LEFT = 'left';
 var MOVE_RIGHT = 'right';
+var RESTART = 'r';
 
 // Preload game images
 var images = {};
@@ -27,30 +31,35 @@ var images = {};
 
 
 
-
+class Entity {
+    render(ctx) {
+        ctx.drawImage(this.sprite, this.x, this.y);
+    }
+}
 
 // This section is where you will be doing most of your coding
-class Enemy {
+class Enemy extends Entity {
+    
     constructor(xPos) {
+        super();
         this.x = xPos;
         this.y = -ENEMY_HEIGHT;
         this.sprite = images['enemy.png'];
 
         // Each enemy should have a different speed
-        this.speed = Math.random() / 2 + 0.25;
+        this.speed = Math.random() / 2 + 0.25/*+ (Math.floor(this.s))*/;
     }
 
     update(timeDiff) {
         this.y = this.y + timeDiff * this.speed;
     }
 
-    render(ctx) {
-        ctx.drawImage(this.sprite, this.x, this.y);
-    }
 }
 
-class Player {
+class Player extends Entity {
+    
     constructor() {
+        super();
         this.x = 2 * PLAYER_WIDTH;
         this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10;
         this.sprite = images['player.png'];
@@ -65,15 +74,7 @@ class Player {
             this.x = this.x + PLAYER_WIDTH;
         }
     }
-
-    render(ctx) {
-        ctx.drawImage(this.sprite, this.x, this.y);
-    }
 }
-
-
-
-
 
 /*
 This section is a tiny game engine.
@@ -120,7 +121,7 @@ class Engine {
 
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
-        while (!enemySpot || this.enemies[enemySpot]) {
+        while (/*!enemySpot ||*/ this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
         }
 
@@ -185,6 +186,19 @@ class Engine {
             this.ctx.font = 'bold 30px Impact';
             this.ctx.fillStyle = '#ffffff';
             this.ctx.fillText(this.score + ' GAME OVER', 5, 30);
+            this.ctx.fillText('PRESS "R" TO RESTART', 5, 200);
+            document.addEventListener('keydown', e => {
+                if(e.keyCode === R_KEY_CODE /*&& isPlayerDead()*/){
+                    this.player = new Player();
+                    this.enemies = [];
+                    this.setupEnemies();
+                    // this.start();
+                    this.score = 0;
+                    this.lastFrame = Date.now();
+                    this.gameLoop();
+                    
+                }
+            });
         }
         else {
             // If player is not dead, then draw the score
@@ -200,6 +214,16 @@ class Engine {
 
     isPlayerDead() {
         // TODO: fix this function!
+        
+        for(var i = 0; i < this.enemies.length; i++) {
+            var TOLERANCE = 23
+            if (this.enemies[i] && this.enemies[i].x > this.player.x - ENEMY_WIDTH + TOLERANCE && this.enemies[i].x < this.player.x + PLAYER_WIDTH - TOLERANCE) {
+                if (this.enemies[i].y > this.player.y - ENEMY_HEIGHT + TOLERANCE && this.enemies[i].y < this.player.y + PLAYER_HEIGHT - TOLERANCE) {
+                    return true;
+                }
+            }
+            
+        }
         return false;
     }
 }
