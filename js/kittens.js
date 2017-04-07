@@ -152,17 +152,6 @@ class Engine {
         this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH);
     }
     
-    // setupBullet() {
-    //     if (!this.bullets) {
-    //         this.bullets = [];
-    //     }
-
-        // while (this.bu.filter(e => !!e).length < MAX_ENEMIES) {
-        //     this.addEnemy();
-        // }
-    // }
-
-    // This method finds a random spot where there is no enemy, and puts one in there
     addBullet(playerSpot) {
         var bulletSpot = playerSpot + (PLAYER_WIDTH-BULLET_WIDTH)/2;
         this.bulletsClip.push(new Bullet(bulletSpot));
@@ -172,7 +161,6 @@ class Engine {
     start() {
         this.score = 0;
         this.lastFrame = Date.now();
-        audio.play();
         // Listen for keyboard left/right and update the player
         document.addEventListener('keydown', e => {
             if (e.keyCode === LEFT_ARROW_CODE) {
@@ -221,10 +209,34 @@ class Engine {
 
         // Check if any enemies should die
         this.enemies.forEach((enemy, enemyIdx) => {
-            if (enemy.y > GAME_HEIGHT) {
+            var enemyShot = false
+            for(var i = 0; i < this.bulletsClip.length; i++) { 
+                    if (this.enemies[enemyIdx] && this.enemies[enemyIdx].x > this.bulletsClip[i].x - ENEMY_WIDTH && this.enemies[enemyIdx].x < this.bulletsClip[i].x + BULLET_WIDTH) {
+                        if (this.enemies[enemyIdx].y > this.bulletsClip[i].y - ENEMY_HEIGHT && this.enemies[enemyIdx].y < this.bulletsClip[i].y + PLAYER_HEIGHT) { 
+                            enemyShot = true;
+                        }
+                    }
+                }
+                
+            if (enemy.y > GAME_HEIGHT || enemyShot) {
                 delete this.enemies[enemyIdx];
             }
         });
+        
+        // Check if any bullet should die
+        var tempArray =[];
+        this.bulletsClip.forEach((bullet, bulletIdx) => {
+            if (bullet.y < 0) {
+                console.log(this.bulletsClip.length)
+                console.log(this.bulletsClip)
+                tempArray.push(bulletIdx);
+            }
+        });
+        // tempArray.forEach((splice(1), indexIdx) => {
+        for(var i = 0; i < tempArray.length; i++) {
+                    this.bulletsClip.splice(tempArray[i],1);
+        };
+
         this.setupEnemies();
 
         // Check if player is dead
@@ -260,6 +272,21 @@ class Engine {
     }
 
     isPlayerDead() {
+        // TODO: fix this function!
+        
+        for(var i = 0; i < this.enemies.length; i++) {
+            var TOLERANCE = 23
+            if (this.enemies[i] && this.enemies[i].x > this.player.x - ENEMY_WIDTH + TOLERANCE && this.enemies[i].x < this.player.x + PLAYER_WIDTH - TOLERANCE) {
+                if (this.enemies[i].y > this.player.y - ENEMY_HEIGHT + TOLERANCE && this.enemies[i].y < this.player.y + PLAYER_HEIGHT - TOLERANCE) {
+                    return true;
+                }
+            }
+            
+        }
+        return false;
+    }
+    
+    isEnemyDead() {
         // TODO: fix this function!
         
         for(var i = 0; i < this.enemies.length; i++) {
