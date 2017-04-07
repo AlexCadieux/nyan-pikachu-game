@@ -2,7 +2,7 @@
 var audio = new Audio("/images/Nightcore- Let the bodies hit the floor - from YouTube.mp3");
 audio.play();
 var GAME_WIDTH = 1050;
-var GAME_HEIGHT = 650;
+var GAME_HEIGHT = 550;
 
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
@@ -70,7 +70,7 @@ class Enemy extends Entity {
         this.sprite = images['enemy.png'];
 
         // Each enemy should have a different speed
-        this.speed = Math.random() / 2 + 0.25 /*+ (math.Floor(this.s))*/;
+        this.speed = Math.random() / 1 + 0.25 /*+ (math.Floor(this.s))*/;
     }
 
     update(timeDiff) {
@@ -243,7 +243,7 @@ class Engine {
         if (this.isPlayerDead()) {
             // If they are dead, then it's game over!
             this.ctx.font = 'bold 30px Impact';
-            this.ctx.fillStyle = '#ffffff';
+            this.ctx.fillStyle = '#e73827';
             this.ctx.fillText(this.score + ' GAME OVER', 5, 30);
             this.ctx.fillText('PRESS "R" TO RESTART', 5, 200);
             document.addEventListener('keydown', e => {
